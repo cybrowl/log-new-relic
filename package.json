@@ -1,0 +1,24 @@
+{
+  "name": "log-new-relic",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cybrowl/log-new-relic.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/cybrowl/log-new-relic/issues"
+  },
+  "homepage": "https://github.com/cybrowl/log-new-relic#readme",
+  "description": "",
+  "dependencies": {
+    "dotenv": "^16.0.3",
+    "node-fetch": "^3.3.1"
+  }
+}
