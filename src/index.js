@@ -7,8 +7,11 @@ import { default_identity } from "./utils/identity.js";
 
 config();
 
+// change me for dev
+const isProd = true;
+
 const NEW_RELIC_API_KEY = process.env.NEW_RELIC_API_KEY;
-const LOGGER_CANISTER_ID = Boolean(process.env.PRODUCTION)
+const LOGGER_CANISTER_ID = isProd
   ? process.env.LOGGER_CANISTER_ID_PROD
   : process.env.LOGGER_CANISTER_ID_DEV;
 
@@ -19,14 +22,17 @@ const headers = {
   "X-Insert-Key": NEW_RELIC_API_KEY,
 };
 
-let actor = await getActor(LOGGER_CANISTER_ID, idlFactory, default_identity);
-
 async function fetchData() {
   try {
+    let actor = await getActor(
+      LOGGER_CANISTER_ID,
+      idlFactory,
+      default_identity,
+      isProd
+    );
+
     const version = await actor.version();
     const authorized = await actor.authorize();
-
-    await actor.log_event([["hello", "world"]], "works");
 
     const logs = await actor.get_logs();
 
