@@ -39,6 +39,7 @@ async function fetchData() {
 
     console.log("version: ", version);
     console.log("authorized: ", authorized);
+    console.log("logs size: ", logs.length);
 
     return logs;
   } catch (error) {
@@ -57,16 +58,32 @@ function convertTimeToNumber(data) {
   });
 }
 
+// Convert [[Text]] to object
+function convertTagsToObject(data) {
+  return data.map((item) => {
+    const newObj = { ...item };
+
+    const attributesObject = {};
+    item.tags.forEach((tag) => {
+      attributesObject[tag[0]] = tag[1];
+    });
+
+    newObj.attributes = attributesObject;
+    delete newObj.tags;
+    return newObj;
+  });
+}
+
 // Forward data to New Relic
 async function forwardToNewRelic(data) {
   if (data) {
-    console.log("data length: ", data.length);
+    const data_with_attributes = convertTagsToObject(data);
 
     try {
       const response = await fetch(NEW_RELIC_LOG_API_URL, {
         method: "POST",
         headers: headers,
-        body: JSON.stringify({ logs: convertTimeToNumber(data) }),
+        body: JSON.stringify(convertTimeToNumber(data_with_attributes)),
       });
 
       if (response.status === 202) {
