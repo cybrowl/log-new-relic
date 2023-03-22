@@ -7,7 +7,7 @@ const newRelicApiKey = process.env.NEW_RELIC_API_KEY;
 
 const NEW_RELIC_LOG_API_URL = "https://log-api.newrelic.com/log/v1";
 const HTTP_ENDPOINT_URL =
-  "https://ree2h-zaaaa-aaaag-aba5q-cai.raw.ic0.app/metrics";
+  "https://jaypp-oiaaa-aaaag-aaa6q-cai.raw.ic0.app/logs";
 
 const headers = {
   "Content-Type": "application/json",
@@ -17,8 +17,6 @@ const headers = {
 async function fetchData() {
   try {
     const response = await fetch(HTTP_ENDPOINT_URL);
-
-    console.log("response: ", response);
 
     if (response.ok) {
       return await response.json();
@@ -34,6 +32,8 @@ async function fetchData() {
 
 async function forwardToNewRelic(data) {
   if (data) {
+    console.log("data: ", data);
+
     try {
       const response = await fetch(NEW_RELIC_LOG_API_URL, {
         method: "POST",
@@ -56,7 +56,6 @@ async function forwardToNewRelic(data) {
   while (true) {
     const data = await fetchData();
 
-    console.log("data: ", data);
     await forwardToNewRelic(data);
     await new Promise((resolve) => setTimeout(resolve, 60 * 1000)); // Adjust the sleep interval as needed
   }
