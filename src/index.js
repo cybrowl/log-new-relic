@@ -7,8 +7,8 @@ import { default_identity } from "./utils/identity.js";
 
 config();
 
-// change me for dev
-const isProd = false;
+// Set to true for production, false for development
+const isProd = true;
 
 const NEW_RELIC_API_KEY = process.env.NEW_RELIC_API_KEY;
 const LOGGER_CANISTER_ID = isProd
@@ -22,18 +22,19 @@ const headers = {
   "X-Insert-Key": NEW_RELIC_API_KEY,
 };
 
-let actor = await getActor(
+// Initialize the actor
+const actor = await getActor(
   LOGGER_CANISTER_ID,
   idlFactory,
   default_identity,
   isProd
 );
 
+// Fetch data from the actor
 async function fetchData() {
   try {
     const version = await actor.version();
     const authorized = await actor.authorize();
-
     const logs = await actor.get_logs();
 
     console.log("version: ", version);
@@ -46,6 +47,7 @@ async function fetchData() {
   }
 }
 
+// Convert BigInt time values to numbers
 function convertTimeToNumber(data) {
   return data.map((item) => {
     return {
@@ -55,6 +57,7 @@ function convertTimeToNumber(data) {
   });
 }
 
+// Forward data to New Relic
 async function forwardToNewRelic(data) {
   if (data) {
     console.log("data length: ", data.length);
@@ -63,7 +66,7 @@ async function forwardToNewRelic(data) {
       const response = await fetch(NEW_RELIC_LOG_API_URL, {
         method: "POST",
         headers: headers,
-        body: JSON.stringify(convertTimeToNumber(data)),
+        body: JSON.stringify({ logs: convertTimeToNumber(data) }),
       });
 
       if (response.status === 202) {
@@ -79,10 +82,10 @@ async function forwardToNewRelic(data) {
   }
 }
 
+// Main loop
 (async function main() {
   while (true) {
     const logs = await fetchData();
-
     await forwardToNewRelic(logs);
     await new Promise((resolve) => setTimeout(resolve, 60 * 1000)); // Adjust the sleep interval as needed
   }
