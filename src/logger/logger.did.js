@@ -15,6 +15,7 @@ export const idlFactory = ({ IDL }) => {
   const HttpResponse = IDL.Record({
     'body' : IDL.Vec(IDL.Nat8),
     'headers' : IDL.Vec(HeaderField),
+    'upgrade' : IDL.Bool,
     'status_code' : IDL.Nat16,
   });
   const Message = IDL.Text;
@@ -25,11 +26,14 @@ export const idlFactory = ({ IDL }) => {
     'child_canister_id' : IDL.Text,
   });
   return IDL.Service({
+    'authorize' : IDL.Func([], [IDL.Bool], []),
+    'clear_logs' : IDL.Func([], [IDL.Text], []),
     'get_logs' : IDL.Func([], [IDL.Vec(LogEvent)], ['query']),
     'http_request' : IDL.Func([HttpRequest], [HttpResponse], ['query']),
     'log_event' : IDL.Func([Tags, Message], [], []),
     'log_health_metric' : IDL.Func([Tags, PayloadHealthMetric], [], []),
     'version' : IDL.Func([], [IDL.Nat], ['query']),
+    'whoami' : IDL.Func([], [IDL.Text], []),
   });
 };
 export const init = ({ IDL }) => { return []; };

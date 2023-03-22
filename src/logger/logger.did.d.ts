@@ -11,6 +11,7 @@ export interface HttpRequest {
 export interface HttpResponse {
   'body' : Uint8Array | number[],
   'headers' : Array<HeaderField>,
+  'upgrade' : boolean,
   'status_code' : number,
 }
 export interface LogEvent { 'tags' : Tags, 'time' : bigint, 'message' : string }
@@ -23,9 +24,12 @@ export interface PayloadHealthMetric {
 }
 export type Tags = Array<[string, string]>;
 export interface _SERVICE {
+  'authorize' : ActorMethod<[], boolean>,
+  'clear_logs' : ActorMethod<[], string>,
   'get_logs' : ActorMethod<[], Array<LogEvent>>,
   'http_request' : ActorMethod<[HttpRequest], HttpResponse>,
   'log_event' : ActorMethod<[Tags, Message], undefined>,
   'log_health_metric' : ActorMethod<[Tags, PayloadHealthMetric], undefined>,
   'version' : ActorMethod<[], bigint>,
+  'whoami' : ActorMethod<[], string>,
 }

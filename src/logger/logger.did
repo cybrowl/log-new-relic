@@ -25,6 +25,7 @@ type HttpResponse =
    body: blob;
    headers: vec HeaderField;
    status_code: nat16;
+   upgrade: bool;
  };
 type HttpRequest = 
  record {
@@ -39,9 +40,12 @@ type HeaderField =
    text;
  };
 service : {
+  authorize: () -> (bool);
+  clear_logs: () -> (text);
   get_logs: () -> (vec LogEvent) query;
   http_request: (HttpRequest) -> (HttpResponse) query;
   log_event: (Tags, Message) -> ();
   log_health_metric: (Tags, PayloadHealthMetric) -> ();
   version: () -> (nat) query;
+  whoami: () -> (text);
 }

@@ -24,9 +24,11 @@ async function fetchData() {
 
   try {
     const response = await fetch(HTTP_ENDPOINT_URL);
-    const res = await actor.version();
+    const version = await actor.version();
+    const authorized = await actor.authorize();
 
-    console.log("res: ", res);
+    console.log("version: ", version);
+    console.log("authorized: ", authorized);
 
     if (response.ok) {
       return await response.json();
@@ -53,6 +55,8 @@ async function forwardToNewRelic(data) {
 
       if (response.status === 202) {
         console.log("Data sent to New Relic successfully");
+        const logs_cleared = await actor.clear_logs();
+        console.log("logs_cleared: ", logs_cleared);
       } else {
         console.error(`Error sending data to New Relic: ${response.status}`);
       }
