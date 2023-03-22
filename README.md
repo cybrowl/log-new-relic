@@ -2,6 +2,14 @@
 
 This script fetches data from an external HTTP endpoint and forwards it to the New Relic Log API. It runs in a continuous loop, fetching data and forwarding it at regular intervals.
 
+## Features
+
+- Fetch logs from a logger canister
+- Convert logs to the desired format
+- Only Authorized caller can get logs and clear
+- Forward logs to New Relic Logs API
+- Clear logs in the logger canister after forwarding
+
 ## Prerequisites
 
 - Node.js installed on your system.
@@ -35,19 +43,25 @@ To start the script, run:
 npm run start
 ```
 
-The script will start fetching data from the specified `HTTP_ENDPOINT_UR`L and forwarding it to New Relic. The script runs in a continuous loop with a sleep interval between iterations. You can adjust the sleep interval by modifying the `setTimeout` value in the main function.
+The script will start fetching data from actor and forwarding it to New Relic. The script runs in a continuous loop with a sleep interval between iterations. You can adjust the sleep interval by modifying the `setTimeout` value in the main function.
 
-## How it works
+# Identity
 
-1. The script imports the required libraries and loads the New Relic API key from the .env file.
+You must create a dir named `identity` which has the file `private_key.txt`. You can store the private key generated using the script in `utils/generate_key.cjs`
 
-2. It defines two main functions:
-   `fetchData()`: Fetches data from the external HTTP endpoint specified in `HTTP_ENDPOINT_URL`.
-   `forwardToNewRelic(data)`: Sends the fetched data to the New Relic Log API using the `NEW_RELIC_LOG_API_URL` and API key provided in the `.env` file.
+## Functions
 
-3. The main function is an async function that runs in a continuous loop. It fetches data, forwards it to New Relic, and then sleeps for a specified interval before repeating the process.
+fetchData
+Fetches data (version, authorized status, and logs) from the logger canister.
 
-## Customization
+convertTimeToNumber
+Converts BigInt time values in the logs to numbers.
 
-- To change the HTTP endpoint URL, update the `HTTP_ENDPOINT_URL` variable with the new URL.
-- To adjust the sleep interval between fetches, change the value passed to setTimeout in the main function.
+convertTagsToObject
+Converts the tags field of each log item to an object with keys and values based on the tags content. The tags field is then replaced with an attributes field.
+
+forwardToNewRelic
+Sends processed logs to the New Relic Logs API. If the data is sent successfully, it clears logs in the logger canister.
+
+main
+The main loop that runs indefinitely, calling the fetchData and forwardToNewRelic functions at regular intervals.
