@@ -8,7 +8,9 @@ import { default_identity } from "./utils/identity.js";
 config();
 
 const NEW_RELIC_API_KEY = process.env.NEW_RELIC_API_KEY;
-const LOGGER_CANISTER_ID = process.env.LOGGER_CANISTER_ID;
+const LOGGER_CANISTER_ID = Boolean(process.env.PRODUCTION)
+  ? process.env.LOGGER_CANISTER_ID_PROD
+  : process.env.LOGGER_CANISTER_ID_DEV;
 
 const NEW_RELIC_LOG_API_URL = "https://log-api.newrelic.com/log/v1";
 
