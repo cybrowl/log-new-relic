@@ -22,15 +22,15 @@ const headers = {
   "X-Insert-Key": NEW_RELIC_API_KEY,
 };
 
+let actor = await getActor(
+  LOGGER_CANISTER_ID,
+  idlFactory,
+  default_identity,
+  isProd
+);
+
 async function fetchData() {
   try {
-    let actor = await getActor(
-      LOGGER_CANISTER_ID,
-      idlFactory,
-      default_identity,
-      isProd
-    );
-
     const version = await actor.version();
     const authorized = await actor.authorize();
 
