@@ -4,7 +4,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node ./src/index.js"
   },
   "repository": {
     "type": "git",
@@ -18,6 +18,8 @@
   "homepage": "https://github.com/cybrowl/log-new-relic#readme",
   "description": "",
   "dependencies": {
+    "@dfinity/agent": "^0.15.4",
+    "@dfinity/identity": "^0.15.4",
     "dotenv": "^16.0.3",
     "node-fetch": "^3.3.1"
   }

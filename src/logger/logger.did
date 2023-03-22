@@ -1,0 +1,47 @@
+type Tags = 
+ vec record {
+       text;
+       text;
+     };
+type PayloadHealthMetric = 
+ record {
+   child_canister_id: text;
+   metrics: vec record {
+                  text;
+                  int;
+                };
+   name: text;
+   parent_canister_id: text;
+ };
+type Message = text;
+type LogEvent = 
+ record {
+   message: text;
+   tags: Tags;
+   time: int;
+ };
+type HttpResponse = 
+ record {
+   body: blob;
+   headers: vec HeaderField;
+   status_code: nat16;
+ };
+type HttpRequest = 
+ record {
+   body: blob;
+   headers: vec HeaderField;
+   method: text;
+   url: text;
+ };
+type HeaderField = 
+ record {
+   text;
+   text;
+ };
+service : {
+  get_logs: () -> (vec LogEvent) query;
+  http_request: (HttpRequest) -> (HttpResponse) query;
+  log_event: (Tags, Message) -> ();
+  log_health_metric: (Tags, PayloadHealthMetric) -> ();
+  version: () -> (nat) query;
+}
