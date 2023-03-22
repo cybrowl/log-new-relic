@@ -30,7 +30,7 @@ Replace your-api-key-here with your actual New Relic API key.
 To start the script, run:
 
 ```
-node index.js
+npm run start
 ```
 
 The script will start fetching data from the specified `HTTP_ENDPOINT_UR`L and forwarding it to New Relic. The script runs in a continuous loop with a sleep interval between iterations. You can adjust the sleep interval by modifying the `setTimeout` value in the main function.

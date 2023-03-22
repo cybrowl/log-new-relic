@@ -1,16 +1,14 @@
 import { config } from "dotenv";
-import { Ed25519KeyIdentity } from "@dfinity/identity";
 import fetch from "node-fetch";
 
 import { getActor } from "./utils/actor.js";
 import { idlFactory } from "./logger/logger.did.js";
+import { default_identity } from "./utils/identity.js";
 
 config();
 
 const NEW_RELIC_API_KEY = process.env.NEW_RELIC_API_KEY;
 const LOGGER_CANISTER_ID = process.env.LOGGER_CANISTER_ID;
-
-let mishicat_identity = Ed25519KeyIdentity.generate();
 
 const NEW_RELIC_LOG_API_URL = "https://log-api.newrelic.com/log/v1";
 const HTTP_ENDPOINT_URL =
@@ -22,7 +20,7 @@ const headers = {
 };
 
 async function fetchData() {
-  let actor = await getActor(LOGGER_CANISTER_ID, idlFactory, mishicat_identity);
+  let actor = await getActor(LOGGER_CANISTER_ID, idlFactory, default_identity);
 
   try {
     const response = await fetch(HTTP_ENDPOINT_URL);
