@@ -21,6 +21,8 @@ This script fetches data from an external HTTP endpoint and forwards it to the N
 
 ```
 NEW_RELIC_API_KEY=your-api-key-here
+LOGGER_CANISTER_ID_DEV=your-canister-id-here
+LOGGER_CANISTER_ID_PROD=your-canister-id-here
 ```
 
 Replace your-api-key-here with your actual New Relic API key.
