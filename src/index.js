@@ -8,7 +8,7 @@ import { default_identity } from "./utils/identity.js";
 config();
 
 // change me for dev
-const isProd = true;
+const isProd = false;
 
 const NEW_RELIC_API_KEY = process.env.NEW_RELIC_API_KEY;
 const LOGGER_CANISTER_ID = isProd

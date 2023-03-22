@@ -3,16 +3,6 @@ type Tags =
        text;
        text;
      };
-type PayloadHealthMetric = 
- record {
-   child_canister_id: text;
-   metrics: vec record {
-                  text;
-                  int;
-                };
-   name: text;
-   parent_canister_id: text;
- };
 type Message = text;
 type LogEvent = 
  record {
@@ -20,32 +10,11 @@ type LogEvent =
    tags: Tags;
    time: int;
  };
-type HttpResponse = 
- record {
-   body: blob;
-   headers: vec HeaderField;
-   status_code: nat16;
-   upgrade: bool;
- };
-type HttpRequest = 
- record {
-   body: blob;
-   headers: vec HeaderField;
-   method: text;
-   url: text;
- };
-type HeaderField = 
- record {
-   text;
-   text;
- };
 service : {
   authorize: () -> (bool);
   clear_logs: () -> (text);
   get_logs: () -> (vec LogEvent) query;
-  http_request: (HttpRequest) -> (HttpResponse) query;
   log_event: (Tags, Message) -> ();
-  log_health_metric: (Tags, PayloadHealthMetric) -> ();
   version: () -> (nat) query;
   whoami: () -> (text);
 }
