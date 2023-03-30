@@ -1,0 +1,14 @@
+name: Call API every minute
+
+on:
+  schedule:
+    - cron: "* * * * *" # Run every minute
+
+jobs:
+  call-api:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Execute curl command
+        run: |
+          curl https://log-new-relic.vercel.app/api/cron

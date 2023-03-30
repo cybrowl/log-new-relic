@@ -1,8 +1,11 @@
 export const idlFactory = ({ IDL }) => {
   const Tags = IDL.Vec(IDL.Tuple(IDL.Text, IDL.Text));
   const LogEvent = IDL.Record({
+    'env' : IDL.Text,
     'tags' : Tags,
     'time' : IDL.Int,
+    'hostname' : IDL.Text,
+    'logtype' : IDL.Text,
     'message' : IDL.Text,
   });
   const Message = IDL.Text;

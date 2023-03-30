@@ -2,3 +2,4 @@
 .dfx
 identity
 node_modules
+.vercel

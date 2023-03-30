@@ -3,7 +3,7 @@ import fetch from "node-fetch";
 
 import { getActor } from "./utils/actor.js";
 import { idlFactory } from "./logger/logger.did.js";
-import { default_identity } from "./utils/identity.js";
+import { parseIdentityProd } from "./utils/identity.js";
 
 config();
 
@@ -23,10 +23,12 @@ const headers = {
 };
 
 // Initialize the actor
+const admin_identity = parseIdentityProd(process.env.PRIVATE_KEY);
+
 const actor = await getActor(
   LOGGER_CANISTER_ID,
   idlFactory,
-  default_identity,
+  admin_identity,
   isProd
 );
 
@@ -34,11 +36,12 @@ const actor = await getActor(
 async function fetchData() {
   try {
     const version = await actor.version();
-    const authorized = await actor.authorize();
-    const logs = await actor.get_logs();
-
     console.log("version: ", version);
+
+    const authorized = await actor.authorize();
     console.log("authorized: ", authorized);
+
+    const logs = await actor.get_logs();
     console.log("logs size: ", logs.length);
 
     return logs;
@@ -63,7 +66,11 @@ function convertTagsToObject(data) {
   return data.map((item) => {
     const newObj = { ...item };
 
-    const attributesObject = {};
+    const attributesObject = {
+      logtype: item.logtype,
+      hostname: item.hostname,
+    };
+
     item.tags.forEach((tag) => {
       attributesObject[tag[0]] = tag[1];
     });
@@ -100,10 +107,25 @@ async function forwardToNewRelic(data) {
 }
 
 // Main loop
-(async function main() {
-  while (true) {
-    const logs = await fetchData();
-    await forwardToNewRelic(logs);
-    await new Promise((resolve) => setTimeout(resolve, 60 * 1000)); // Adjust the sleep interval as needed
+// NOTE: Only Dev
+// (async function main() {
+//   while (true) {
+//     const logs = await fetchData();
+//     await forwardToNewRelic(logs);
+//     await new Promise((resolve) => setTimeout(resolve, 60 * 1000)); // Adjust the sleep interval as needed
+//   }
+// })();
+
+export default async function handler(req, res) {
+  if (req.url === "/api/cron") {
+    try {
+      const logs = await fetchData();
+      await forwardToNewRelic(logs);
+      res.status(200).json({ message: "Cron job executed successfully" });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  } else {
+    // Handle other routes
   }
-})();
+}

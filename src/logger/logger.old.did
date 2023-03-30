@@ -6,6 +6,9 @@ type Tags =
 type Message = text;
 type LogEvent = 
  record {
+   hostname: text;
+   is_prod: bool;
+   logtype: text;
    message: text;
    tags: Tags;
    time: int;

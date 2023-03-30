@@ -6,6 +6,9 @@ type Tags =
 type Message = text;
 type LogEvent = 
  record {
+   env: text;
+   hostname: text;
+   logtype: text;
    message: text;
    tags: Tags;
    time: int;

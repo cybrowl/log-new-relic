@@ -15,4 +15,11 @@ const parseIdentity = (keyPath) => {
   return Ed25519KeyIdentity.fromSecretKey(privateKey);
 };
 
+export const parseIdentityProd = (privateKeyHex) => {
+  const privateKey = Uint8Array.from(Buffer.from(privateKeyHex, "hex"));
+
+  // Initialize an identity from the secret key
+  return Ed25519KeyIdentity.fromSecretKey(privateKey);
+};
+
 export const default_identity = parseIdentity("private_key.txt");
