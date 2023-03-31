@@ -31,7 +31,10 @@ This script fetches data from an external HTTP endpoint and forwards it to the N
 NEW_RELIC_API_KEY=your-api-key-here
 LOGGER_CANISTER_ID_DEV=your-canister-id-here
 LOGGER_CANISTER_ID_PROD=your-canister-id-here
+PRIVATE_KEY=your-Ed25519KeyIdentity
 ```
+
+Note: you can generate Ed25519KeyIdentity with `generate_key.cjs`
 
 Replace your-api-key-here with your actual New Relic API key.
 
@@ -47,7 +50,7 @@ The script will start fetching data from actor and forwarding it to New Relic. T
 
 # Identity
 
-You must create a dir named `identity` which has the file `private_key.txt`. You can store the private key generated using the script in `utils/generate_key.cjs`
+You must create an environment variable named PRIVATE_KEY to serve as your private key identity. You can generate the private key using the script located at `utils/generate_key.cjs`. Store the generated private key as the value of the PRIVATE_KEY variable in the .env file.
 
 ## Functions
 

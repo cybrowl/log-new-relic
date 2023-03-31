@@ -3,7 +3,7 @@ import fetch from "node-fetch";
 
 import { getActor } from "./utils/actor.js";
 import { idlFactory } from "./logger/logger.did.js";
-import { parseIdentityProd } from "./utils/identity.js";
+import { parseIdentity } from "./utils/identity.js";
 
 config();
 
@@ -23,7 +23,7 @@ const headers = {
 };
 
 // Initialize the actor
-const admin_identity = parseIdentityProd(process.env.PRIVATE_KEY);
+const admin_identity = parseIdentity(process.env.PRIVATE_KEY);
 
 const actor = await getActor(
   LOGGER_CANISTER_ID,
@@ -106,15 +106,14 @@ async function forwardToNewRelic(data) {
   }
 }
 
-// Main loop
 // NOTE: Only Dev
-// (async function main() {
-//   while (true) {
-//     const logs = await fetchData();
-//     await forwardToNewRelic(logs);
-//     await new Promise((resolve) => setTimeout(resolve, 60 * 1000)); // Adjust the sleep interval as needed
-//   }
-// })();
+(async function main() {
+  while (true && isProd === false) {
+    const logs = await fetchData();
+    await forwardToNewRelic(logs);
+    await new Promise((resolve) => setTimeout(resolve, 60 * 1000)); // Adjust the sleep interval as needed
+  }
+})();
 
 export default async function handler(req, res) {
   if (req.url === "/api/cron") {
