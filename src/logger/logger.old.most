@@ -1,4 +1,16 @@
 // Version: 1.0.0
+type LogEvent =
+  {
+    env : Text;
+    hostname : Text;
+    logtype : Text;
+    message : Text;
+    tags : Tags;
+    time : Int
+  };
+type Tags = [(Text, Text)];
 actor {
-  stable var authorized : ?Principal
+  stable var authorized : ?Principal;
+  stable var logs_pending_stable_storage : [LogEvent];
+  stable var logs_storage_stable_storage : [LogEvent]
 };

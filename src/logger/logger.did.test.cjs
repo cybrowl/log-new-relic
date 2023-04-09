@@ -1,29 +1,28 @@
  const idlFactory = ({ IDL }) => {
-  const Tags = IDL.Vec(IDL.Text);
+  const AuthorizationError = IDL.Variant({ 'NotAuthorized' : IDL.Bool });
+  const Result_1 = IDL.Variant({ 'ok' : IDL.Text, 'err' : AuthorizationError });
+  const Tags = IDL.Vec(IDL.Tuple(IDL.Text, IDL.Text));
   const LogEvent = IDL.Record({
+    'env' : IDL.Text,
     'tags' : Tags,
     'time' : IDL.Int,
-    'payload' : IDL.Text,
+    'hostname' : IDL.Text,
+    'logtype' : IDL.Text,
+    'message' : IDL.Text,
   });
-  const HeaderField = IDL.Tuple(IDL.Text, IDL.Text);
-  const HttpResponse = IDL.Record({
-    'body' : IDL.Vec(IDL.Nat8),
-    'headers' : IDL.Vec(HeaderField),
-    'status_code' : IDL.Nat16,
+  const Result = IDL.Variant({
+    'ok' : IDL.Vec(LogEvent),
+    'err' : AuthorizationError,
   });
-  const Payload = IDL.Text;
-  const PayloadHealthMetric = IDL.Record({
-    'parent_canister_id' : IDL.Text,
-    'metrics' : IDL.Vec(IDL.Tuple(IDL.Text, IDL.Int)),
-    'name' : IDL.Text,
-    'child_canister_id' : IDL.Text,
-  });
+  const Message = IDL.Text;
   return IDL.Service({
-    'get_logs' : IDL.Func([], [IDL.Vec(LogEvent)], ['query']),
-    'get_logs_json' : IDL.Func([], [HttpResponse], ['query']),
-    'log_event' : IDL.Func([Tags, Payload], [], []),
-    'log_health_metric' : IDL.Func([Tags, PayloadHealthMetric], [], []),
+    'authorize' : IDL.Func([], [IDL.Bool], []),
+    'clear_logs' : IDL.Func([], [Result_1], []),
+    'get_logs' : IDL.Func([], [Result], ['query']),
+    'health' : IDL.Func([], [], []),
+    'log_event' : IDL.Func([Tags, Message], [], []),
     'version' : IDL.Func([], [IDL.Nat], ['query']),
+    'whoami' : IDL.Func([], [IDL.Text], []),
   });
 };
  const init = ({ IDL }) => { return []; };

@@ -3,6 +3,16 @@ type Tags =
        text;
        text;
      };
+type Result_1 = 
+ variant {
+   err: AuthorizationError;
+   ok: text;
+ };
+type Result = 
+ variant {
+   err: AuthorizationError;
+   ok: vec LogEvent;
+ };
 type Message = text;
 type LogEvent = 
  record {
@@ -13,10 +23,12 @@ type LogEvent =
    tags: Tags;
    time: int;
  };
+type AuthorizationError = variant {NotAuthorized: bool;};
 service : {
   authorize: () -> (bool);
-  clear_logs: () -> (text);
-  get_logs: () -> (vec LogEvent) query;
+  clear_logs: () -> (Result_1);
+  get_logs: () -> (Result) query;
+  health: () -> ();
   log_event: (Tags, Message) -> ();
   version: () -> (nat) query;
   whoami: () -> (text);

@@ -8,7 +8,7 @@ import { parseIdentity } from "./utils/identity.js";
 config();
 
 // Set to true for production, false for development
-const isProd = true;
+const isProd = false;
 
 const NEW_RELIC_API_KEY = process.env.NEW_RELIC_API_KEY;
 const LOGGER_CANISTER_ID = isProd
@@ -109,7 +109,8 @@ async function forwardToNewRelic(data) {
 // NOTE: Only Dev
 (async function main() {
   while (true && isProd === false) {
-    const logs = await fetchData();
+    const { ok: logs, err: error } = await fetchData();
+
     await forwardToNewRelic(logs);
     await new Promise((resolve) => setTimeout(resolve, 60 * 1000)); // Adjust the sleep interval as needed
   }
@@ -118,7 +119,8 @@ async function forwardToNewRelic(data) {
 export default async function handler(req, res) {
   if (req.url === "/api/cron") {
     try {
-      const logs = await fetchData();
+      const { ok: logs, err: error } = await fetchData();
+
       await forwardToNewRelic(logs);
       res.status(200).json({ message: "Cron job executed successfully" });
     } catch (error) {

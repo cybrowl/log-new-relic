@@ -5,6 +5,7 @@ export const getActor = async (canisterId, idlFactory, identity, isProd) => {
     ? `https://${canisterId}.ic0.app/`
     : `http://127.0.0.1:8080`;
 
+  console.log("PROD: ", isProd);
   console.log("HOST: ", HOST);
 
   if (canisterId === undefined) {
