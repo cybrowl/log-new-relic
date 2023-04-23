@@ -2,7 +2,7 @@ name: Call API every minute
 
 on:
   schedule:
-    - cron: "* * * * *" # Run every minute
+    - cron: "*/5 * * * *" # Run every 5 minutes
 
 jobs:
   call-api:

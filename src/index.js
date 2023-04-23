@@ -68,6 +68,8 @@ function convertTagsToObject(data) {
 //     try {
 //       const authorized = await actor.authorize();
 //       const { ok: logs, err: error } = await actor.get_logs();
+//       console.log("logs_size: ", logs.length);
+
 //       const data_with_attributes = convertTagsToObject(logs);
 //       const response = await fetch(NEW_RELIC_LOG_API_URL, {
 //         method: "POST",
@@ -76,8 +78,6 @@ function convertTagsToObject(data) {
 //       });
 
 //       if (response.status === 202) {
-//         console.log("response.status: ", response.status);
-
 //         const logs_cleared = await actor.clear_logs();
 //         console.log(logs_cleared);
 //       } else {
@@ -102,6 +102,7 @@ export default async function handler(req, res) {
       }
 
       const { ok: logs, err: error } = await actor.get_logs();
+
       const data_with_attributes = convertTagsToObject(logs);
       const response = await fetch(NEW_RELIC_LOG_API_URL, {
         method: "POST",
@@ -113,6 +114,8 @@ export default async function handler(req, res) {
         res.status(200).json({
           message: "Data sent to New Relic successfully",
           response: response,
+          logs_length: logs.length,
+          authorized: authorized,
         });
 
         const logs_cleared = await actor.clear_logs();
@@ -120,12 +123,16 @@ export default async function handler(req, res) {
       } else {
         res.status(500).json({
           message: `Error sending data to New Relic: ${response.status}`,
+          logs_length: logs.length,
+          authorized: authorized,
         });
       }
     } catch (error) {
-      res
-        .status(500)
-        .json({ message: "forwardToNewRelic failed", err: error.message });
+      res.status(500).json({
+        message: "forwardToNewRelic failed",
+        logs_length: logs.length,
+        authorized: authorized,
+      });
     }
   } else {
   }
