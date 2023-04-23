@@ -8,7 +8,7 @@ import { parseIdentity } from "./utils/identity.js";
 config();
 
 // Set to true for production, false for development
-const isProd = false;
+const isProd = true;
 
 const NEW_RELIC_API_KEY = process.env.NEW_RELIC_API_KEY;
 const LOGGER_CANISTER_ID = isProd
@@ -41,7 +41,7 @@ async function fetchData() {
     const authorized = await actor.authorize();
     console.log("authorized: ", authorized);
 
-    const logs = await actor.get_logs();
+    const { ok: logs } = await actor.get_logs();
     console.log("logs size: ", logs.length);
 
     return logs;
@@ -109,7 +109,7 @@ async function forwardToNewRelic(data) {
 // NOTE: Only Dev
 (async function main() {
   while (true && isProd === false) {
-    const { ok: logs, err: error } = await fetchData();
+    const logs = await fetchData();
 
     await forwardToNewRelic(logs);
     await new Promise((resolve) => setTimeout(resolve, 60 * 1000)); // Adjust the sleep interval as needed
