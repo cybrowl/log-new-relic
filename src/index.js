@@ -32,26 +32,6 @@ const actor = await getActor(
   isProd
 );
 
-// Fetch data from the actor
-async function fetchData() {
-  try {
-    const version = await actor.version();
-    console.log("version: ", version);
-
-    const authorized = await actor.authorize();
-    console.log("authorized: ", authorized);
-
-    const { ok: logs, err: error } = await actor.get_logs();
-
-    console.log("logs size: ", logs.length);
-
-    return logs;
-  } catch (error) {
-    console.error(`Error fetching data: ${error.message}`);
-    return null;
-  }
-}
-
 // Convert BigInt time values to numbers
 function convertTimeToNumber(data) {
   return data.map((item) => {
@@ -82,12 +62,47 @@ function convertTagsToObject(data) {
   });
 }
 
-// Forward data to New Relic
-async function forwardToNewRelic(data) {
-  if (data) {
-    const data_with_attributes = convertTagsToObject(data);
+// NOTE: Only Dev
+// (async function main() {
+//   while (true && isProd === true) {
+//     try {
+//       const authorized = await actor.authorize();
+//       const { ok: logs, err: error } = await actor.get_logs();
+//       const data_with_attributes = convertTagsToObject(logs);
+//       const response = await fetch(NEW_RELIC_LOG_API_URL, {
+//         method: "POST",
+//         headers: headers,
+//         body: JSON.stringify(convertTimeToNumber(data_with_attributes)),
+//       });
 
+//       if (response.status === 202) {
+//         console.log("response.status: ", response.status);
+
+//         const logs_cleared = await actor.clear_logs();
+//         console.log(logs_cleared);
+//       } else {
+//         console.log("err:");
+//       }
+//     } catch (error) {
+//       console.log("err:");
+//     }
+//     await new Promise((resolve) => setTimeout(resolve, 60 * 1000)); // Adjust the sleep interval as needed
+//   }
+// })();
+
+export default async function handler(req, res) {
+  if (req.url === "/api/cron") {
     try {
+      const authorized = await actor.authorize();
+
+      if (authorized === false) {
+        res.status(500).json({
+          message: "Not_Authorized",
+        });
+      }
+
+      const { ok: logs, err: error } = await actor.get_logs();
+      const data_with_attributes = convertTagsToObject(logs);
       const response = await fetch(NEW_RELIC_LOG_API_URL, {
         method: "POST",
         headers: headers,
@@ -95,39 +110,23 @@ async function forwardToNewRelic(data) {
       });
 
       if (response.status === 202) {
-        console.log("Data sent to New Relic successfully");
+        res.status(200).json({
+          message: "Data sent to New Relic successfully",
+          response: response,
+        });
+
         const logs_cleared = await actor.clear_logs();
         console.log(logs_cleared);
       } else {
-        console.error(`Error sending data to New Relic: ${response.status}`);
+        res.status(500).json({
+          message: `Error sending data to New Relic: ${response.status}`,
+        });
       }
     } catch (error) {
-      console.error(`Error sending data to New Relic: ${error.message}`);
-    }
-  }
-}
-
-// NOTE: Only Dev
-(async function main() {
-  while (true && isProd === false) {
-    const logs = await fetchData();
-
-    await forwardToNewRelic(logs);
-    await new Promise((resolve) => setTimeout(resolve, 60 * 1000)); // Adjust the sleep interval as needed
-  }
-})();
-
-export default async function handler(req, res) {
-  if (req.url === "/api/cron") {
-    try {
-      const { ok: logs, err: error } = await fetchData();
-
-      await forwardToNewRelic(logs);
-      res.status(200).json({ message: "Cron job executed successfully" });
-    } catch (error) {
-      res.status(500).json({ error: error.message });
+      res
+        .status(500)
+        .json({ message: "forwardToNewRelic failed", err: error.message });
     }
   } else {
-    // Handle other routes
   }
 }
