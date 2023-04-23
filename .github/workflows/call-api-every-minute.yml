@@ -11,4 +11,4 @@ jobs:
     steps:
       - name: Execute curl command
         run: |
-          curl https://log-new-relic.vercel.app/api/cron
+          curl https://new-relic-logger.vercel.app/api/cron

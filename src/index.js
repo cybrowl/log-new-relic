@@ -41,7 +41,8 @@ async function fetchData() {
     const authorized = await actor.authorize();
     console.log("authorized: ", authorized);
 
-    const { ok: logs } = await actor.get_logs();
+    const { ok: logs, err: error } = await actor.get_logs();
+
     console.log("logs size: ", logs.length);
 
     return logs;
