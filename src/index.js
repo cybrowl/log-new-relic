@@ -113,6 +113,14 @@ export default async function handler(req, res) {
 
         const { ok: logs, err: error } = await actor.get_logs();
 
+        if (error || logs === undefined) {
+          res.status(500).json({
+            message: "Issue with get_logs",
+            error: error,
+            authorized: authorized,
+          });
+        }
+
         const data_with_attributes = convertTagsToObject(logs);
         const response = await fetch(NEW_RELIC_LOG_API_URL, {
           method: "POST",
