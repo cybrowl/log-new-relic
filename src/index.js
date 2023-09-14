@@ -11,9 +11,9 @@ config();
 const isProd = true;
 
 const NEW_RELIC_API_KEY = process.env.NEW_RELIC_API_KEY;
-const LOGGER_CANISTER_ID = isProd
-  ? process.env.LOGGER_CANISTER_ID_PROD
-  : process.env.LOGGER_CANISTER_ID_DEV;
+const LOGGER_CANISTER_IDS = isProd
+  ? process.env.LOGGER_CANISTER_IDS_PROD.split(",")
+  : process.env.LOGGER_CANISTER_IDS_DEV.split(",");
 
 const NEW_RELIC_LOG_API_URL = "https://log-api.newrelic.com/log/v1";
 
@@ -22,14 +22,11 @@ const headers = {
   "X-Insert-Key": NEW_RELIC_API_KEY,
 };
 
-// Initialize the actor
+// Initialize the actors
 const admin_identity = parseIdentity(process.env.PRIVATE_KEY);
 
-const actor = await getActor(
-  LOGGER_CANISTER_ID,
-  idlFactory,
-  admin_identity,
-  isProd
+const actors = LOGGER_CANISTER_IDS.map((id) =>
+  getActor(id, idlFactory, admin_identity, isProd)
 );
 
 // Convert BigInt time values to numbers
@@ -64,76 +61,91 @@ function convertTagsToObject(data) {
 
 // NOTE: Only Dev
 // (async function main() {
-//   while (true && isProd === true) {
-//     try {
-//       const authorized = await actor.authorize();
-//       const { ok: logs, err: error } = await actor.get_logs();
-//       console.log("logs_size: ", logs.length);
+//   const resolvedActors = await Promise.all(actors);
 
-//       const data_with_attributes = convertTagsToObject(logs);
-//       const response = await fetch(NEW_RELIC_LOG_API_URL, {
-//         method: "POST",
-//         headers: headers,
-//         body: JSON.stringify(convertTimeToNumber(data_with_attributes)),
-//       });
+//   for (const actor of resolvedActors) {
+//     while (true) {
+//       try {
+//         const authorized = await actor.authorize();
 
-//       if (response.status === 202) {
-//         const logs_cleared = await actor.clear_logs();
-//         console.log(logs_cleared);
-//       } else {
-//         console.log("err:");
+//         if (authorized) {
+//           const { ok: logs, err: error } = await actor.get_logs();
+//           console.log("logs_size: ", logs.length);
+
+//           const data_with_attributes = convertTagsToObject(logs);
+//           const response = await fetch(NEW_RELIC_LOG_API_URL, {
+//             method: "POST",
+//             headers: headers,
+//             body: JSON.stringify(convertTimeToNumber(data_with_attributes)),
+//           });
+
+//           if (response.status === 202) {
+//             const logs_cleared = await actor.clear_logs();
+//             console.log(logs_cleared);
+//           } else {
+//             console.log("Error sending logs:", response.statusText);
+//           }
+//         } else {
+//           console.log("Not authorized to fetch logs.");
+//         }
+//       } catch (error) {
+//         console.log("Error occurred:", error.message);
 //       }
-//     } catch (error) {
-//       console.log("err:");
+//       await new Promise((resolve) => setTimeout(resolve, 60 * 1000)); // Adjust the sleep interval as needed
 //     }
-//     await new Promise((resolve) => setTimeout(resolve, 60 * 1000)); // Adjust the sleep interval as needed
 //   }
 // })();
 
 export default async function handler(req, res) {
   if (req.url === "/api/cron") {
-    try {
-      const authorized = await actor.authorize();
+    const resolvedActors = await Promise.all(actors);
 
-      if (authorized === false) {
-        res.status(500).json({
-          message: "Not_Authorized",
+    for (const actor of resolvedActors) {
+      try {
+        const authorized = await actor.authorize();
+
+        if (authorized === false) {
+          res.status(500).json({
+            message: "Not_Authorized",
+          });
+          return; // return to stop processing if not authorized
+        }
+
+        const { ok: logs, err: error } = await actor.get_logs();
+
+        const data_with_attributes = convertTagsToObject(logs);
+        const response = await fetch(NEW_RELIC_LOG_API_URL, {
+          method: "POST",
+          headers: headers,
+          body: JSON.stringify(convertTimeToNumber(data_with_attributes)),
         });
-      }
 
-      const { ok: logs, err: error } = await actor.get_logs();
+        if (response.status === 202) {
+          res.status(200).json({
+            message: "Data sent to New Relic successfully",
+            response: response,
+            logs_length: logs.length,
+            authorized: authorized,
+          });
 
-      const data_with_attributes = convertTagsToObject(logs);
-      const response = await fetch(NEW_RELIC_LOG_API_URL, {
-        method: "POST",
-        headers: headers,
-        body: JSON.stringify(convertTimeToNumber(data_with_attributes)),
-      });
-
-      if (response.status === 202) {
-        res.status(200).json({
-          message: "Data sent to New Relic successfully",
-          response: response,
-          logs_length: logs.length,
+          const logs_cleared = await actor.clear_logs();
+          console.log(logs_cleared);
+        } else {
+          res.status(500).json({
+            message: `Error sending data to New Relic: ${response.status}`,
+            logs_length: logs.length,
+            authorized: authorized,
+          });
+        }
+      } catch (error) {
+        res.status(500).json({
+          message: "forwardToNewRelic failed",
+          logs_length: logs?.length, // ensure logs is defined
           authorized: authorized,
         });
-
-        const logs_cleared = await actor.clear_logs();
-        console.log(logs_cleared);
-      } else {
-        res.status(500).json({
-          message: `Error sending data to New Relic: ${response.status}`,
-          logs_length: logs.length,
-          authorized: authorized,
-        });
       }
-    } catch (error) {
-      res.status(500).json({
-        message: "forwardToNewRelic failed",
-        logs_length: logs.length,
-        authorized: authorized,
-      });
     }
   } else {
+    // handle other URLs
   }
 }

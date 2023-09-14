@@ -2,7 +2,7 @@ import { HttpAgent, Actor } from "@dfinity/agent";
 
 export const getActor = async (canisterId, idlFactory, identity, isProd) => {
   const HOST = isProd
-    ? `https://${canisterId}.ic0.app/`
+    ? `https://${canisterId}.icp0.io/`
     : `http://127.0.0.1:8080`;
 
   console.log("PROD: ", isProd);
