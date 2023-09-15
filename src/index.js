@@ -7,21 +7,23 @@ import { parseIdentity } from "./utils/identity.js";
 
 config();
 
+// New Relic configurations
 const NEW_RELIC_API_KEY = process.env.NEW_RELIC_API_KEY;
-const LOGGER_CANISTER_ID_PROD = process.env.LOGGER_CANISTER_ID_PROD;
-const LOGGER_CANISTER_ID_STAGING = process.env.LOGGER_CANISTER_ID_STAGING;
-
 const NEW_RELIC_LOG_API_URL = "https://log-api.newrelic.com/log/v1";
-
 const headers = {
   "Content-Type": "application/json",
   "X-Insert-Key": NEW_RELIC_API_KEY,
 };
 
-// Initialize the actors
-const admin_identity = parseIdentity(process.env.PRIVATE_KEY);
-const isProd = true;
+// Canister configurations for different environments
+const LOGGER_CANISTER_ID_PROD = process.env.LOGGER_CANISTER_ID_PROD;
+const LOGGER_CANISTER_ID_STAGING = process.env.LOGGER_CANISTER_ID_STAGING;
 
+// Parse identity for admin authentication
+const admin_identity = parseIdentity(process.env.PRIVATE_KEY);
+
+// Initialize actor instances for both prod and staging environments
+const isProd = true;
 const actor_prod = await getActor(
   LOGGER_CANISTER_ID_PROD,
   idlFactory,
@@ -36,7 +38,11 @@ const actor_staging = await getActor(
   isProd
 );
 
-// Convert BigInt time values to numbers
+/**
+ * Convert BigInt time values to regular numbers.
+ * @param {Array} data - Array containing data with time values.
+ * @returns {Array} Array with time values converted to numbers.
+ */
 function convertTimeToNumber(data) {
   return data.map((item) => {
     return {
@@ -46,7 +52,11 @@ function convertTimeToNumber(data) {
   });
 }
 
-// Convert [[Text]] to object
+/**
+ * Convert tag arrays to an attributes object.
+ * @param {Array} data - Array containing data with tags.
+ * @returns {Array} Array with tags converted to attributes.
+ */
 function convertTagsToObject(data) {
   return data.map((item) => {
     const newObj = { ...item };
@@ -66,6 +76,11 @@ function convertTagsToObject(data) {
   });
 }
 
+/**
+ * Process logs and send them to New Relic.
+ * @param {Object} actor - Actor instance.
+ * @param {Object} res - Response object.
+ */
 async function processLogs(actor, res) {
   try {
     const authorized = await actor.authorize();
@@ -112,6 +127,9 @@ async function processLogs(actor, res) {
   }
 }
 
+/**
+ * Main handler to route API requests.
+ */
 export default async function handler(req, res) {
   if (req.url === "/api/prod") {
     await processLogs(actor_prod, res);
