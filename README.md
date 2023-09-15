@@ -68,3 +68,7 @@ Sends processed logs to the New Relic Logs API. If the data is sent successfully
 
 main
 The main loop that runs indefinitely, calling the fetchData and forwardToNewRelic functions at regular intervals.
+
+## Ping
+
+Moved to https://uptimerobot.com/ and https://betterstack.com/

@@ -18,7 +18,7 @@ const headers = {
   "X-Insert-Key": NEW_RELIC_API_KEY,
 };
 
-// Initialize the actor
+// Initialize the actors
 const admin_identity = parseIdentity(process.env.PRIVATE_KEY);
 const isProd = true;
 
