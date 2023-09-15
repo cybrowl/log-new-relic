@@ -87,15 +87,15 @@ async function processLogs(actor, res) {
     });
 
     if (response.status === 202) {
+      const logs_cleared = await actor.clear_logs();
+      console.log(logs_cleared);
+
       res.status(200).json({
         message: "Data sent to New Relic successfully",
         response: response,
         logs_length: logs.length,
         authorized: authorized,
       });
-
-      const logs_cleared = await actor.clear_logs();
-      console.log(logs_cleared);
     } else {
       res.status(500).json({
         message: `Error sending data to New Relic: ${response.status}`,
