@@ -7,13 +7,9 @@ import { parseIdentity } from "./utils/identity.js";
 
 config();
 
-// Set to true for production, false for development
-const isProd = true;
-
 const NEW_RELIC_API_KEY = process.env.NEW_RELIC_API_KEY;
-const LOGGER_CANISTER_ID = isProd
-  ? process.env.LOGGER_CANISTER_ID_PROD
-  : process.env.LOGGER_CANISTER_ID_DEV;
+const LOGGER_CANISTER_ID_PROD = process.env.LOGGER_CANISTER_ID_PROD;
+const LOGGER_CANISTER_ID_STAGING = process.env.LOGGER_CANISTER_ID_STAGING;
 
 const NEW_RELIC_LOG_API_URL = "https://log-api.newrelic.com/log/v1";
 
@@ -24,9 +20,17 @@ const headers = {
 
 // Initialize the actor
 const admin_identity = parseIdentity(process.env.PRIVATE_KEY);
+const isProd = true;
 
-const actor = await getActor(
-  LOGGER_CANISTER_ID,
+const actor_prod = await getActor(
+  LOGGER_CANISTER_ID_PROD,
+  idlFactory,
+  admin_identity,
+  isProd
+);
+
+const actor_staging = await getActor(
+  LOGGER_CANISTER_ID_STAGING,
   idlFactory,
   admin_identity,
   isProd
@@ -62,78 +66,60 @@ function convertTagsToObject(data) {
   });
 }
 
-// NOTE: Only Dev
-// (async function main() {
-//   while (true && isProd === true) {
-//     try {
-//       const authorized = await actor.authorize();
-//       const { ok: logs, err: error } = await actor.get_logs();
-//       console.log("logs_size: ", logs.length);
+async function processLogs(actor, res) {
+  try {
+    const authorized = await actor.authorize();
 
-//       const data_with_attributes = convertTagsToObject(logs);
-//       const response = await fetch(NEW_RELIC_LOG_API_URL, {
-//         method: "POST",
-//         headers: headers,
-//         body: JSON.stringify(convertTimeToNumber(data_with_attributes)),
-//       });
+    if (authorized === false) {
+      res.status(500).json({
+        message: "Not_Authorized",
+      });
+      return;
+    }
 
-//       if (response.status === 202) {
-//         const logs_cleared = await actor.clear_logs();
-//         console.log(logs_cleared);
-//       } else {
-//         console.log("err:");
-//       }
-//     } catch (error) {
-//       console.log("err:");
-//     }
-//     await new Promise((resolve) => setTimeout(resolve, 60 * 1000)); // Adjust the sleep interval as needed
-//   }
-// })();
+    const { ok: logs, err: error } = await actor.get_logs();
 
-export default async function handler(req, res) {
-  if (req.url === "/api/cron") {
-    try {
-      const authorized = await actor.authorize();
+    const data_with_attributes = convertTagsToObject(logs);
+    const response = await fetch(NEW_RELIC_LOG_API_URL, {
+      method: "POST",
+      headers: headers,
+      body: JSON.stringify(convertTimeToNumber(data_with_attributes)),
+    });
 
-      if (authorized === false) {
-        res.status(500).json({
-          message: "Not_Authorized",
-        });
-      }
-
-      const { ok: logs, err: error } = await actor.get_logs();
-
-      const data_with_attributes = convertTagsToObject(logs);
-      const response = await fetch(NEW_RELIC_LOG_API_URL, {
-        method: "POST",
-        headers: headers,
-        body: JSON.stringify(convertTimeToNumber(data_with_attributes)),
+    if (response.status === 202) {
+      res.status(200).json({
+        message: "Data sent to New Relic successfully",
+        response: response,
+        logs_length: logs.length,
+        authorized: authorized,
       });
 
-      if (response.status === 202) {
-        res.status(200).json({
-          message: "Data sent to New Relic successfully",
-          response: response,
-          logs_length: logs.length,
-          authorized: authorized,
-        });
-
-        const logs_cleared = await actor.clear_logs();
-        console.log(logs_cleared);
-      } else {
-        res.status(500).json({
-          message: `Error sending data to New Relic: ${response.status}`,
-          logs_length: logs.length,
-          authorized: authorized,
-        });
-      }
-    } catch (error) {
+      const logs_cleared = await actor.clear_logs();
+      console.log(logs_cleared);
+    } else {
       res.status(500).json({
-        message: "forwardToNewRelic failed",
+        message: `Error sending data to New Relic: ${response.status}`,
         logs_length: logs.length,
         authorized: authorized,
       });
     }
+  } catch (error) {
+    res.status(500).json({
+      message: "forwardToNewRelic failed",
+      logs_length: logs.length,
+      authorized: authorized,
+    });
+  }
+}
+
+export default async function handler(req, res) {
+  if (req.url === "/api/prod") {
+    await processLogs(actor_prod, res);
+  } else if (req.url === "/api/staging") {
+    await processLogs(actor_staging, res);
   } else {
+    res.status(404).json({
+      message: "Invalid endpoint",
+    });
   }
 }
