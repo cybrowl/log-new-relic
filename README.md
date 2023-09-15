@@ -71,4 +71,4 @@ The main loop that runs indefinitely, calling the fetchData and forwardToNewReli
 
 ## Ping
 
-Moved to https://uptimerobot.com/ and https://betterstack.com/
+Moved to https://betterstack.com/
