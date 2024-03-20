@@ -1,4 +1,4 @@
- const idlFactory = ({ IDL }) => {
+export const idlFactory = ({ IDL }) => {
   const AuthorizationError = IDL.Variant({ 'NotAuthorized' : IDL.Bool });
   const Result_1 = IDL.Variant({ 'ok' : IDL.Text, 'err' : AuthorizationError });
   const Tags = IDL.Vec(IDL.Tuple(IDL.Text, IDL.Text));
@@ -18,12 +18,13 @@
   return IDL.Service({
     'authorize' : IDL.Func([], [IDL.Bool], []),
     'clear_logs' : IDL.Func([], [Result_1], []),
+    'cycles_low' : IDL.Func([], [IDL.Bool], ['query']),
     'get_logs' : IDL.Func([], [Result], ['query']),
     'health' : IDL.Func([], [], []),
     'log_event' : IDL.Func([Tags, Message], [], []),
+    'size' : IDL.Func([], [IDL.Nat], ['query']),
     'version' : IDL.Func([], [IDL.Nat], ['query']),
     'whoami' : IDL.Func([], [IDL.Text], []),
   });
 };
- const init = ({ IDL }) => { return []; };
-module.exports = { idlFactory };
+export const init = ({ IDL }) => { return []; };

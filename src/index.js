@@ -2,48 +2,49 @@ import { config } from "dotenv";
 import fetch from "node-fetch";
 
 import { getActor } from "./utils/actor.js";
-import { idlFactory } from "./logger/logger.did.js";
-import { parseIdentity } from "./utils/identity.js";
+import { idlFactory } from "./logger/service.did.js";
+
+import { Ed25519KeyIdentity } from "@dfinity/identity";
 
 config();
 
+const parse_identity = (private_key_hex) =>
+  Ed25519KeyIdentity.fromSecretKey(
+    Uint8Array.from(Buffer.from(private_key_hex, "hex"))
+  );
+
 // New Relic configurations
-const NEW_RELIC_API_KEY = process.env.NEW_RELIC_API_KEY;
-const NEW_RELIC_LOG_API_URL = "https://log-api.newrelic.com/log/v1";
+const new_relic_api_key = process.env.NEW_RELIC_API_KEY;
+const new_relic_log_api_url = "https://log-api.newrelic.com/log/v1";
 const headers = {
   "Content-Type": "application/json",
-  "X-Insert-Key": NEW_RELIC_API_KEY,
+  "X-Insert-Key": new_relic_api_key,
 };
 
 // Canister configurations for different environments
-const LOGGER_CANISTER_ID_PROD = process.env.LOGGER_CANISTER_ID_PROD;
-const LOGGER_CANISTER_ID_STAGING = process.env.LOGGER_CANISTER_ID_STAGING;
+const logger_canister_id_prod = process.env.LOGGER_CANISTER_ID_PROD;
+const logger_canister_id_staging = process.env.LOGGER_CANISTER_ID_STAGING;
 
 // Parse identity for admin authentication
-const admin_identity = parseIdentity(process.env.PRIVATE_KEY);
+const admin_identity = parse_identity(process.env.PRIVATE_KEY);
 
 // Initialize actor instances for both prod and staging environments
-const isProd = true;
-const actor_prod = await getActor(
-  LOGGER_CANISTER_ID_PROD,
+const is_prod = true;
+const actor_logger_prod = await getActor(
+  logger_canister_id_prod,
   idlFactory,
   admin_identity,
-  isProd
+  is_prod
 );
 
-const actor_staging = await getActor(
-  LOGGER_CANISTER_ID_STAGING,
+const actor_logger_staging = await getActor(
+  logger_canister_id_staging,
   idlFactory,
   admin_identity,
-  isProd
+  is_prod
 );
 
-/**
- * Convert BigInt time values to regular numbers.
- * @param {Array} data - Array containing data with time values.
- * @returns {Array} Array with time values converted to numbers.
- */
-function convertTimeToNumber(data) {
+function convert_time_to_number(data) {
   return data.map((item) => {
     return {
       ...item,
@@ -52,36 +53,26 @@ function convertTimeToNumber(data) {
   });
 }
 
-/**
- * Convert tag arrays to an attributes object.
- * @param {Array} data - Array containing data with tags.
- * @returns {Array} Array with tags converted to attributes.
- */
-function convertTagsToObject(data) {
+function convert_tags_to_object(data) {
   return data.map((item) => {
-    const newObj = { ...item };
+    const new_obj = { ...item };
 
-    const attributesObject = {
+    const attributes_object = {
       logtype: item.logtype,
       hostname: item.hostname,
     };
 
     item.tags.forEach((tag) => {
-      attributesObject[tag[0]] = tag[1];
+      attributes_object[tag[0]] = tag[1];
     });
 
-    newObj.attributes = attributesObject;
-    delete newObj.tags;
-    return newObj;
+    new_obj.attributes = attributes_object;
+    delete new_obj.tags;
+    return new_obj;
   });
 }
 
-/**
- * Process logs and send them to New Relic.
- * @param {Object} actor - Actor instance.
- * @param {Object} res - Response object.
- */
-async function processLogs(actor, res) {
+async function process_logs(actor, res) {
   try {
     const authorized = await actor.authorize();
 
@@ -94,11 +85,11 @@ async function processLogs(actor, res) {
 
     const { ok: logs, err: error } = await actor.get_logs();
 
-    const data_with_attributes = convertTagsToObject(logs);
-    const response = await fetch(NEW_RELIC_LOG_API_URL, {
+    const data_with_attributes = convert_tags_to_object(logs);
+    const response = await fetch(new_relic_log_api_url, {
       method: "POST",
       headers: headers,
-      body: JSON.stringify(convertTimeToNumber(data_with_attributes)),
+      body: JSON.stringify(convert_time_to_number(data_with_attributes)),
     });
 
     if (response.status === 202) {
@@ -132,9 +123,9 @@ async function processLogs(actor, res) {
  */
 export default async function handler(req, res) {
   if (req.url === "/api/prod") {
-    await processLogs(actor_prod, res);
+    await process_logs(actor_logger_prod, res);
   } else if (req.url === "/api/staging") {
-    await processLogs(actor_staging, res);
+    await process_logs(actor_logger_staging, res);
   } else {
     res.status(404).json({
       message: "Invalid endpoint",

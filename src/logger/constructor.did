@@ -27,9 +27,11 @@ type AuthorizationError = variant {NotAuthorized: bool;};
 service : {
   authorize: () -> (bool);
   clear_logs: () -> (Result_1);
+  cycles_low: () -> (bool) query;
   get_logs: () -> (Result) query;
   health: () -> ();
   log_event: (Tags, Message) -> ();
+  size: () -> (nat) query;
   version: () -> (nat) query;
   whoami: () -> (text);
 }

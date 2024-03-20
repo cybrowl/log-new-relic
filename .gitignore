@@ -3,3 +3,5 @@
 identity
 node_modules
 .vercel
+
+package-lock.json
